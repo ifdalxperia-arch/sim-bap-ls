@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistem Verifikasi Berkas & Kalkulator BAP LS</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Inter & JetBrains Mono untuk angka keuangan -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            navy: {
+              800: '#1e293b',
+              900: '#0f172a',
+              950: '#090d16',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Gaya Khusus Cetak (Print / PDF) */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .print-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+      }
+      .print-page-break {
+        page-break-before: always;
+      }
+      table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+      }
+      th, td {
+        border: 1px solid #334155 !important;
+        padding: 6px 8px !important;
+      }
+    }
+
+    .print-only {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- ==================================================================== -->
+  <!-- HALAMAN LOGIN (MUNCUL SEBELUM AKSES APLIKASI UTAMA)                  -->
+  <!-- ==================================================================== -->
+  <div id="login-screen" class="no-print fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4 overflow-y-auto">
+    <!-- Dekorasi Latar Belakang -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-32 -left-32 w-96 h-96 bg-emerald-600/15 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-teal-600/15 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-auto">
+      <!-- Header Kartu Login -->
+      <div class="bg-slate-900 px-6 py-7 text-center border-b border-slate-800">
+        <div class="w-14 h-14 mx-auto mb-3.5 bg-emerald-600/20 border border-emerald-500/30 rounded-2xl flex items-center justify-center text-emerald-400 shadow-inner">
+          <i data-lucide="shield-check" class="w-8 h-8"></i>
+        </div>
+        <h1 class="text-xl font-extrabold text-white tracking-tight">SIM-BAP LS & Verifikasi</h1>
+        <p class="text-xs text-slate-400 mt-1">Sistem Administrasi Pencairan & Kalkulator Pajak Kontrak</p>
+      </div>
+
+      <!-- Form Login -->
+      <form id="login-form" onsubmit="handleLogin(event)" class="p-6 sm:p-8 space-y-5">
+        <!-- Pesan Error Login -->
+        <div id="login-error" class="hidden p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-center gap-2.5">
+          <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0"></i>
+          <span id="login-error-text">Username atau password yang Anda masukkan salah!</span>
+        </div>
+
+        <div>
+          <label for="login-username" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            Username
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+              <i data-lucide="user" class="w-4 h-4"></i>
+            </span>
+            <input type="text" id="login-username" required autocomplete="username" placeholder="Masukkan username..."
+                   class="w-full pl-10 pr-4 py-2.5 text-sm font-medium text-slate-900 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" />
+          </div>
+        </div>
+
+        <div>
+          <label for="login-password" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            Password
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+              <i data-lucide="lock" class="w-4 h-4"></i>
+            </span>
+            <input type="password" id="login-password" required autocomplete="current-password" placeholder="Masukkan password..."
+                   class="w-full pl-10 pr-11 py-2.5 text-sm font-medium text-slate-900 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition" />
+            <button type="button" onclick="togglePasswordVisibility()" title="Tampilkan / Sembunyikan Password"
+                    class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
+              <i id="eye-icon" data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit"
+                class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-sm shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition cursor-pointer">
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          <span>Masuk ke Aplikasi</span>
+        </button>
+
+        <div class="pt-2 text-center border-t border-slate-100">
+          <p class="text-[11px] text-slate-400">
+            Akses terbatas untuk Verifikator & Administrasi Keuangan
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- WRAPPER APLIKASI UTAMA (TERSEMBUNYI SEBELUM LOGIN)                   -->
+  <!-- ==================================================================== -->
+  <div id="app-wrapper" class="hidden">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="no-print fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg border border-slate-700 flex items-center gap-3 text-sm font-medium">
+      <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400 shrink-0"></i>
+      <span id="toast-message">Berhasil disimpan!</span>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Reset (Pengganti confirm()) -->
+  <div id="reset-modal" class="no-print fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-fade-in">
+      <div class="flex items-center gap-3 text-amber-600 mb-3">
+        <div class="p-2.5 bg-amber-100 rounded-xl">
+          <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">Reset Data Aplikasi?</h3>
+      </div>
+      <p class="text-sm text-slate-600 leading-relaxed mb-6">
+        Tindakan ini akan menghapus seluruh centang verifikasi dokumen, catatan, dan mengembalikan nilai kontrak ke pengaturan awal. Yakin ingin melanjutkan?
+      </p>
+      <div class="flex justify-end gap-3">
+        <button onclick="closeResetModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+          Batal
+        </button>
+        <button onclick="executeReset()" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition">
+          Ya, Reset Semua
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADER UTAMA (Non-Print) -->
+  <header class="no-print bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="p-2.5 bg-emerald-600/20 border border-emerald-500/30 rounded-xl text-emerald-400">
+            <i data-lucide="file-spreadsheet" class="w-7 h-7"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">SIM-BAP LS & Verifikasi Berkas</h1>
+              <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                100% Pekerjaan
+              </span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-400">Kalkulator Pajak Kontrak & Checklist Susunan Dokumen Pencairan</p>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Cepat Header -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <div class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/80 text-xs text-slate-300">
+            <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Operator: <strong class="text-white">ifdal</strong></span>
+          </div>
+          <button onclick="copySummaryToClipboard()" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer">
+            <i data-lucide="copy" class="w-4 h-4 text-emerald-400"></i>
+            <span>Salin Ringkasan</span>
+          </button>
+          <button onclick="window.print()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-950 transition cursor-pointer">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>Cetak Lembar Verifikasi</span>
+          </button>
+          <button onclick="openResetModal()" title="Reset Data" class="inline-flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-amber-400 hover:bg-slate-800 border border-slate-800 transition cursor-pointer">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+          </button>
+          <button onclick="handleLogout()" title="Keluar / Logout" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 transition cursor-pointer">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Keluar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigasi Tab Mobile / Tablet -->
+      <div class="flex lg:hidden mt-4 pt-3 border-t border-slate-800 gap-2">
+        <button id="mobile-tab-calc" onclick="switchMobileView('calc')" class="flex-1 py-2 px-3 rounded-xl text-xs font-semibold bg-emerald-600 text-white flex items-center justify-center gap-2">
+          <i data-lucide="calculator" class="w-4 h-4"></i>
+          Kalkulator BAP LS
+        </button>
+        <button id="mobile-tab-docs" onclick="switchMobileView('docs')" class="flex-1 py-2 px-3 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 flex items-center justify-center gap-2">
+          <i data-lucide="check-square" class="w-4 h-4"></i>
+          Checklist Berkas (<span id="mobile-badge-count">0/24</span>)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- KONTEN UTAMA INTERAKTIF (Non-Print) -->
+  <main class="no-print max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    <!-- Identitas Paket Pekerjaan (Global Input) -->
+    <section class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-5 mb-6">
+      <div class="flex items-center gap-2 text-slate-800 font-bold text-sm mb-3.5">
+        <i data-lucide="briefcase" class="w-4 h-4 text-emerald-600"></i>
+        <span>IDENTITAS PAKET PEKERJAAN & PENYEDIA</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Paket Pekerjaan</label>
+          <input type="text" id="input-paket" placeholder="Contoh: Rehabilitasi Gedung Kantor..." 
+                 class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                 oninput="saveState()" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Perusahaan / Penyedia</label>
+          <input type="text" id="input-penyedia" placeholder="Contoh: CV. Karya Mandiri Sejahtera" 
+                 class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                 oninput="saveState()" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Nomor & Tanggal Kontrak / SPK</label>
+          <input type="text" id="input-nokontrak" placeholder="Contoh: 027/114/SPK/2026" 
+                 class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                 oninput="saveState()" />
+        </div>
+      </div>
+    </section>
+
+    <!-- GRID UTAMA: KIRI (KALKULATOR BAP LS) & KANAN (CHECKLIST DOKUMEN) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- ============================================================== -->
+      <!-- PANEL 1: KALKULATOR NILAI KONTRAK & PAJAK (BAP LS)             -->
+      <!-- ============================================================== -->
+      <div id="panel-calc" class="lg:col-span-6 space-y-6">
+        
+        <!-- Card Input Parameter Kontrak -->
+        <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+          <div class="bg-slate-900 px-5 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-2.5 text-white">
+              <i data-lucide="calculator" class="w-5 h-5 text-emerald-400"></i>
+              <h2 class="font-bold text-sm sm:text-base tracking-wide">Kalkulator Nilai Kontrak & Pajak (BAP LS)</h2>
+            </div>
+            <span class="text-xs font-mono text-slate-400">Rumus DPP 100/111</span>
+          </div>
+
+          <div class="p-5 space-y-5">
+            <!-- Input Nilai Kontrak -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <label for="input-nilai-kontrak" class="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Nilai Kontrak (Termasuk PPN)
+                </label>
+                <span id="terbilang-singkat" class="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                  Rp 0
+                </span>
+              </div>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500 font-bold text-base">Rp</span>
+                <input type="text" id="input-nilai-kontrak" inputmode="numeric" value="150.000.000"
+                       class="w-full pl-12 pr-4 py-3 text-lg sm:text-xl font-mono font-bold text-slate-900 bg-slate-50 border-2 border-slate-300 rounded-xl focus:outline-none focus:border-emerald-600 focus:bg-white transition"
+                       oninput="handleContractInput(this)" />
+              </div>
+              <!-- Preset Nominal Cepat -->
+              <div class="flex flex-wrap gap-1.5 mt-2">
+                <button type="button" onclick="setContractValue(50000000)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">50 Jt</button>
+                <button type="button" onclick="setContractValue(100000000)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">100 Jt</button>
+                <button type="button" onclick="setContractValue(150000000)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">150 Jt</button>
+                <button type="button" onclick="setContractValue(200000000)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">200 Jt</button>
+                <button type="button" onclick="setContractValue(500000000)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition">500 Jt</button>
+              </div>
+            </div>
+
+            <!-- Kategori Pekerjaan / Tarif PPh -->
+            <div>
+              <label for="select-kategori" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Kategori Pekerjaan & Tarif Pajak (Sesuai Sheet Excel)
+              </label>
+              <select id="select-kategori" onchange="handleCategoryChange()"
+                      class="w-full px-3.5 py-2.5 text-sm font-medium text-slate-800 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                <option value="konstruksi_kecil" data-ppn="11" data-pph="1.75" data-label="Konstruksi Kecil (PPh Final 1,75%)">
+                  Konstruksi Kualifikasi Kecil — PPN 11% | PPh 1,75%
+                </option>
+                <option value="konstruksi_non_kecil" data-ppn="11" data-pph="2" data-label="Konstruksi Non-Kecil (PPh 2%)">
+                  Konstruksi Non-Kecil / Umum — PPN 11% | PPh 2,00%
+                </option>
+                <option value="barjas_pph22" data-ppn="11" data-pph="1.5" data-label="Pengadaan Barang PPh 22 (1,5%)">
+                  Pengadaan Barang (PPh Pasal 22) — PPN 11% | PPh 1,50%
+                </option>
+                <option value="barjas_pph23" data-ppn="11" data-pph="2" data-label="Pengadaan Jasa PPh 23 (2%)">
+                  Pengadaan Jasa Lainnya (PPh Pasal 23) — PPN 11% | PPh 2,00%
+                </option>
+                <option value="konsultansi_365" data-ppn="11" data-pph="3.65" data-label="Jasa Konsultansi (3,65%)">
+                  Jasa Konsultansi (Tarif Sheet 3,65%) — PPN 11% | PPh 3,65%
+                </option>
+                <option value="konsultansi_35" data-ppn="11" data-pph="3.5" data-label="Jasa Konsultansi (3,5%)">
+                  Jasa Konsultansi Kualifikasi Kecil (3,5%) — PPN 11% | PPh 3,50%
+                </option>
+                <option value="konsultansi_4" data-ppn="11" data-pph="4" data-label="Jasa Konsultansi (4%)">
+                  Jasa Konsultansi Non-Kecil (4%) — PPN 11% | PPh 4,00%
+                </option>
+                <option value="custom" data-ppn="11" data-pph="1.75" data-label="Tarif Custom">
+                  ⚙️ Custom Tarif PPN & PPh (%)...
+                </option>
+              </select>
+
+              <!-- Input Tarif PPN & PPh (Editable / Custom) -->
+              <div class="grid grid-cols-2 gap-3 mt-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-xs font-semibold text-slate-600">Tarif PPN (%)</label>
+                    <div class="flex gap-1">
+                      <button type="button" onclick="setPpnRate(10)" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 hover:bg-slate-300 font-mono font-bold text-slate-700 cursor-pointer">10%</button>
+                      <button type="button" onclick="setPpnRate(11)" class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 font-mono font-bold text-emerald-800 cursor-pointer">11%</button>
+                      <button type="button" onclick="setPpnRate(12)" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 hover:bg-slate-300 font-mono font-bold text-slate-700 cursor-pointer">12%</button>
+                    </div>
+                  </div>
+                  <div class="relative">
+                    <input type="number" id="input-tarif-ppn" step="0.01" min="0" max="100" value="11"
+                           class="w-full pr-8 pl-3 py-1.5 text-sm font-mono font-bold bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                           oninput="calculateBAP()" />
+                    <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-slate-400">%</span>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Tarif PPh (%)</label>
+                  <div class="relative">
+                    <input type="number" id="input-tarif-pph" step="0.01" min="0" max="100" value="1.75"
+                           class="w-full pr-8 pl-3 py-1.5 text-sm font-mono font-bold bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                           oninput="calculateBAP()" />
+                    <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-slate-400">%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Skema Pembayaran / Termin -->
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                Skema Pembayaran / Tahapan BAP
+              </label>
+              <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                <button type="button" onclick="selectTermin('100')" id="btn-termin-100"
+                        class="termin-btn py-2 px-2 rounded-xl border text-xs font-bold transition text-center cursor-pointer">
+                  100%
+                </button>
+                <button type="button" onclick="selectTermin('95')" id="btn-termin-95"
+                        class="termin-btn py-2 px-2 rounded-xl border text-xs font-bold transition text-center cursor-pointer">
+                  Fisik 95%
+                </button>
+                <button type="button" onclick="selectTermin('5')" id="btn-termin-5"
+                        class="termin-btn py-2 px-2 rounded-xl border text-xs font-bold transition text-center cursor-pointer">
+                  Retensi 5%
+                </button>
+                <button type="button" onclick="selectTermin('30')" id="btn-termin-30"
+                        class="termin-btn py-2 px-2 rounded-xl border text-xs font-bold transition text-center cursor-pointer">
+                  UM 30%
+                </button>
+                <button type="button" onclick="selectTermin('50')" id="btn-termin-50"
+                        class="termin-btn py-2 px-2 rounded-xl border text-xs font-bold transition text-center cursor-pointer">
+                  Termin 50%
+                </button>
+                <button type="button" onclick="selectTermin('70')" id="btn-termin-70"
+                        class="termin-btn py-2 px-2 rounded-xl border text-xs font-bold transition text-center cursor-pointer">
+                  Termin 70%
+                </button>
+              </div>
+
+              <!-- Pengaturan Persentase BAP Ini & BAP Lalu -->
+              <div class="grid grid-cols-2 gap-3 mt-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Persentase BAP Ini (%)</label>
+                  <div class="relative">
+                    <input type="number" id="input-persen-bap" step="0.1" min="0" max="100" value="95"
+                           class="w-full pr-8 pl-3 py-2 text-sm font-mono font-bold bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                           oninput="calculateBAP()" />
+                    <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-slate-400">%</span>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Persentase BAP Lalu (%)</label>
+                  <div class="relative">
+                    <input type="number" id="input-persen-lalu" step="0.1" min="0" max="100" value="0"
+                           class="w-full pr-8 pl-3 py-2 text-sm font-mono font-bold bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                           oninput="calculateBAP()" />
+                    <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-slate-400">%</span>
+                  </div>
+                </div>
+              </div>
+              <p id="info-skema-bap" class="text-xs text-slate-500 mt-1.5 italic">
+                * Mode Pembayaran Fisik 95% (Retensi 5% ditahan).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Hasil Rincian Perhitungan BAP LS & Pajak -->
+        <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+          <div class="bg-emerald-900 px-5 py-3.5 flex items-center justify-between text-white">
+            <div class="flex items-center gap-2">
+              <i data-lucide="receipt" class="w-5 h-5 text-emerald-300"></i>
+              <h3 class="font-bold text-sm sm:text-base">Rincian Perhitungan BAP LS Ini</h3>
+            </div>
+            <span id="badge-persen-aktif" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-700 text-emerald-100">
+              95%
+            </span>
+          </div>
+
+          <div class="p-5">
+            <!-- Tabel Rincian Pajak -->
+            <div class="divide-y divide-slate-100 text-sm">
+              <div class="py-2.5 flex justify-between items-center">
+                <div>
+                  <span class="font-semibold text-slate-800">Nilai Bruto BAP Ini</span>
+                  <span id="formula-bruto" class="block text-xs text-slate-400 font-mono">Kontrak × 95%</span>
+                </div>
+                <span id="res-bruto" class="font-mono font-bold text-base text-slate-900">Rp 0</span>
+              </div>
+
+              <div class="py-2.5 flex justify-between items-center bg-slate-50/70 px-2 rounded-lg">
+                <div>
+                  <span class="font-medium text-slate-700">Dasar Pengenaan Pajak (DPP)</span>
+                  <span id="formula-dpp" class="block text-xs text-slate-400 font-mono">Bruto × 100 / 111</span>
+                </div>
+                <span id="res-dpp" class="font-mono font-semibold text-slate-700">Rp 0</span>
+              </div>
+
+              <div class="py-2.5 flex justify-between items-center">
+                <div>
+                  <span class="font-medium text-slate-700">Potongan PPN (<span id="lbl-ppn-rate">11</span>%)</span>
+                  <span id="formula-ppn" class="block text-xs text-slate-400 font-mono">DPP × 11%</span>
+                </div>
+                <span id="res-ppn" class="font-mono font-semibold text-amber-700">Rp 0</span>
+              </div>
+
+              <div class="py-2.5 flex justify-between items-center">
+                <div>
+                  <span class="font-medium text-slate-700">Potongan PPh (<span id="lbl-pph-rate">1,75</span>%)</span>
+                  <span id="formula-pph" class="block text-xs text-slate-400 font-mono">DPP × 1,75%</span>
+                </div>
+                <span id="res-pph" class="font-mono font-semibold text-amber-700">Rp 0</span>
+              </div>
+
+              <div class="py-2.5 flex justify-between items-center bg-amber-50/60 px-2.5 rounded-lg">
+                <span class="font-bold text-amber-900">Jumlah Pajak Dipungut (PPN + PPh)</span>
+                <span id="res-total-pajak" class="font-mono font-bold text-amber-800">Rp 0</span>
+              </div>
+
+              <div class="py-3 flex justify-between items-center">
+                <div>
+                  <span class="font-semibold text-slate-800">Nilai Netto (Bruto − PPN)</span>
+                  <span class="block text-xs text-slate-400">Nilai sebelum potongan PPh</span>
+                </div>
+                <span id="res-netto" class="font-mono font-bold text-slate-800">Rp 0</span>
+              </div>
+            </div>
+
+            <!-- Highlight Bersih Diterima Penyedia -->
+            <div class="mt-4 p-4 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-sm">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                <div>
+                  <span class="text-xs uppercase tracking-wider text-emerald-400 font-bold">Bersih Diterima Penyedia (Transfer)</span>
+                  <span class="block text-xs text-slate-400">Bruto − (PPN + PPh)</span>
+                </div>
+                <div id="res-bersih" class="text-xl sm:text-2xl font-mono font-extrabold text-emerald-400">
+                  Rp 0
+                </div>
+              </div>
+            </div>
+
+            <!-- Rekapitulasi Posisi Kontrak -->
+            <div class="mt-5 pt-4 border-t border-slate-200">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Rekapitulasi Status Kontrak</h4>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <span class="text-slate-500 block">Total Nilai Kontrak</span>
+                  <span id="rek-kontrak" class="font-mono font-bold text-slate-900 text-sm mt-0.5 block">Rp 0</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <span class="text-slate-500 block">Pembayaran s.d. BAP Lalu</span>
+                  <span id="rek-lalu" class="font-mono font-bold text-slate-700 text-sm mt-0.5 block">Rp 0</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-sky-50/70 border border-sky-200">
+                  <span class="text-sky-800 block">Pembayaran BAP Ini</span>
+                  <span id="rek-bap-ini" class="font-mono font-bold text-sky-900 text-sm mt-0.5 block">Rp 0</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 col-span-2 sm:col-span-2">
+                  <span class="text-emerald-800 block">Total Pembayaran s.d. BAP Ini</span>
+                  <span id="rek-sd-ini" class="font-mono font-bold text-emerald-900 text-sm mt-0.5 block">Rp 0</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 col-span-2 sm:col-span-1">
+                  <span class="text-slate-500 block">Sisa Nilai Kontrak</span>
+                  <span id="rek-sisa" class="font-mono font-bold text-slate-900 text-sm mt-0.5 block">Rp 0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabel Simulasi Multi-Termin (95% vs 5% atau 30% + 65% + 5%) -->
+        <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+          <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+            <div class="flex items-center gap-2">
+              <i data-lucide="layers" class="w-4 h-4 text-slate-600"></i>
+              <h3 class="font-bold text-xs sm:text-sm uppercase tracking-wider text-slate-700">Simulasi Lengkap Tahapan (95% & Retensi 5%)</h3>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-slate-100 text-slate-600 uppercase font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="px-3.5 py-2.5">Tahap</th>
+                  <th class="px-3.5 py-2.5 text-right">Bruto</th>
+                  <th class="px-3.5 py-2.5 text-right">PPN</th>
+                  <th class="px-3.5 py-2.5 text-right">PPh</th>
+                  <th class="px-3.5 py-2.5 text-right">Diterima</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-simulasi" class="divide-y divide-slate-100 font-mono">
+                <!-- Diisi otomatis via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- PANEL 2: CHECKLIST SUSUNAN DOKUMEN PENCAIRAN                   -->
+      <!-- ============================================================== -->
+      <div id="panel-docs" class="lg:col-span-6 space-y-6 hidden lg:block">
+        <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+          
+          <!-- Header Panel Checklist -->
+          <div class="bg-slate-900 px-5 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-2.5 text-white">
+              <i data-lucide="folder-check" class="w-5 h-5 text-emerald-400"></i>
+              <h2 class="font-bold text-sm sm:text-base tracking-wide">Susunan Dokumen Pencairan</h2>
+            </div>
+            <span id="doc-save-indicator" class="text-xs text-emerald-400 flex items-center gap-1">
+              <i data-lucide="cloud-check" class="w-3.5 h-3.5"></i> Tersimpan otomatis
+            </span>
+          </div>
+
+          <div class="p-5">
+            <!-- Tab Pilihan Termin Dokumen (95% vs 5%) -->
+            <div class="grid grid-cols-2 gap-2.5 p-1.5 bg-slate-100 rounded-xl border border-slate-200 mb-5">
+              <button type="button" id="tab-doc-95" onclick="switchDocTab('95')"
+                      class="py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer bg-white text-slate-900 shadow-xs">
+                <span>Pencairan 95%</span>
+                <span id="count-badge-95" class="px-2 py-0.5 text-xs rounded-full bg-emerald-100 text-emerald-800 font-mono">0/24</span>
+              </button>
+              <button type="button" id="tab-doc-5" onclick="switchDocTab('5')"
+                      class="py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer text-slate-600 hover:text-slate-900">
+                <span>Pencairan 5% (Retensi)</span>
+                <span id="count-badge-5" class="px-2 py-0.5 text-xs rounded-full bg-slate-200 text-slate-700 font-mono">0/13</span>
+              </button>
+            </div>
+
+            <!-- Progress Bar Kelengkapan Berkas -->
+            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 mb-5">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <div>
+                  <span class="text-xs font-bold uppercase tracking-wider text-slate-700 block">Progress Kelengkapan Berkas</span>
+                  <span id="progress-detail-text" class="text-xs text-slate-500">0 dari 21 dokumen wajib lengkap (0 opsional)</span>
+                </div>
+                <span id="progress-percent-text" class="text-lg font-mono font-extrabold text-emerald-600">0%</span>
+              </div>
+              <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                <div id="progress-bar-fill" class="h-full bg-emerald-500 transition-all duration-300 rounded-full" style="width: 0%"></div>
+              </div>
+              <div class="flex items-center justify-between mt-2.5 pt-2.5 border-t border-slate-200/80 text-xs">
+                <span id="status-wajib-badge" class="inline-flex items-center gap-1.5 font-semibold text-amber-700">
+                  <i data-lucide="clock" class="w-3.5 h-3.5"></i> Berkas Wajib Belum Lengkap
+                </span>
+                <button type="button" onclick="toggleCheckAllCurrentTab()" id="btn-check-all" class="font-semibold text-emerald-700 hover:text-emerald-800 underline cursor-pointer">
+                  Centang Semua
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter & Pencarian Dokumen -->
+            <div class="flex flex-col sm:flex-row gap-2.5 mb-4">
+              <div class="relative flex-1">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="doc-search" placeholder="Cari nama dokumen..." oninput="renderChecklist()"
+                       class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white" />
+              </div>
+              <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+                <button type="button" onclick="setDocFilter('all')" id="filter-all" class="filter-btn px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-900 shadow-2xs cursor-pointer">Semua</button>
+                <button type="button" onclick="setDocFilter('unchecked')" id="filter-unchecked" class="filter-btn px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 cursor-pointer">Belum</button>
+                <button type="button" onclick="setDocFilter('checked')" id="filter-checked" class="filter-btn px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 cursor-pointer">Sudah</button>
+              </div>
+            </div>
+
+            <!-- Daftar Item Checklist Dokumen -->
+            <div id="checklist-container" class="space-y-2.5 max-h-[680px] overflow-y-auto pr-1">
+              <!-- Diisi dinamis oleh JS -->
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ==================================================================== -->
+  <!-- TAMPILAN KHUSUS CETAK (PRINT VIEW / LEMBAR VERIFIKASI TERPADU)       -->
+  <!-- ==================================================================== -->
+  <div class="print-only print-container p-6 max-w-4xl mx-auto">
+    <!-- Kop Surat Verifikasi -->
+    <div class="border-b-2 border-slate-900 pb-3 mb-4 flex justify-between items-end">
+      <div>
+        <h1 class="text-lg font-bold uppercase tracking-wide">Lembar Verifikasi Dokumen & Perhitungan BAP LS</h1>
+        <p class="text-xs text-slate-600">Dokumen Kontrol Administrasi Pencairan Pekerjaan (100%)</p>
+      </div>
+      <div class="text-right text-xs">
+        <p>Tanggal Cetak: <span id="print-date" class="font-semibold"></span></p>
+        <p>Tahap Pencairan: <span id="print-tahap-title" class="font-bold"></span></p>
+      </div>
+    </div>
+
+    <!-- Info Paket -->
+    <table class="w-full text-xs mb-4">
+      <tbody>
+        <tr>
+          <td class="w-1/4 font-semibold bg-slate-100">Nama Paket Pekerjaan</td>
+          <td id="print-paket" class="w-3/4 font-medium">-</td>
+        </tr>
+        <tr>
+          <td class="font-semibold bg-slate-100">Nama Penyedia</td>
+          <td id="print-penyedia" class="font-medium">-</td>
+        </tr>
+        <tr>
+          <td class="font-semibold bg-slate-100">Nomor Kontrak / SPK</td>
+          <td id="print-nokontrak" class="font-medium">-</td>
+        </tr>
+        <tr>
+          <td class="font-semibold bg-slate-100">Kategori & Tarif Pajak</td>
+          <td id="print-kategori" class="font-medium">-</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Ringkasan Perhitungan Keuangan -->
+    <h2 class="text-xs font-bold uppercase mb-1.5">I. Ringkasan Perhitungan Nilai Kontrak & Pajak</h2>
+    <table class="w-full text-xs mb-5 font-mono">
+      <thead>
+        <tr class="bg-slate-100 font-sans">
+          <th class="text-left">Uraian Perhitungan</th>
+          <th class="text-right">Nominal (Rp)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="font-sans">Nilai Kontrak Keseluruhan</td>
+          <td id="print-kontrak" class="text-right font-bold">Rp 0</td>
+        </tr>
+        <tr>
+          <td class="font-sans">Nilai Bruto BAP Ini (<span id="print-persen">95%</span>)</td>
+          <td id="print-bruto" class="text-right font-bold">Rp 0</td>
+        </tr>
+        <tr>
+          <td class="font-sans">Dasar Pengenaan Pajak (DPP = Bruto × 100/111)</td>
+          <td id="print-dpp" class="text-right">Rp 0</td>
+        </tr>
+        <tr>
+          <td class="font-sans">Potongan PPN (<span id="print-ppn-rate">11%</span>)</td>
+          <td id="print-ppn" class="text-right">Rp 0</td>
+        </tr>
+        <tr>
+          <td class="font-sans">Potongan PPh (<span id="print-pph-rate">1,75%</span>)</td>
+          <td id="print-pph" class="text-right">Rp 0</td>
+        </tr>
+        <tr class="bg-slate-50 font-bold">
+          <td class="font-sans">Total Pajak Dipungut (PPN + PPh)</td>
+          <td id="print-total-pajak" class="text-right">Rp 0</td>
+        </tr>
+        <tr>
+          <td class="font-sans">Nilai Netto (Bruto − PPN)</td>
+          <td id="print-netto" class="text-right">Rp 0</td>
+        </tr>
+        <tr class="bg-slate-100 font-bold">
+          <td class="font-sans">Nilai Bersih Diterima Penyedia (Bruto − PPN − PPh)</td>
+          <td id="print-bersih" class="text-right">Rp 0</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Tabel Checklist Dokumen -->
+    <div class="flex justify-between items-center mb-1.5">
+      <h2 class="text-xs font-bold uppercase">II. Checklist Susunan Dokumen Pencairan (<span id="print-doc-tab-label">95%</span>)</h2>
+      <span id="print-doc-summary" class="text-xs font-semibold"></span>
+    </div>
+    <table class="w-full text-xs mb-6">
+      <thead>
+        <tr class="bg-slate-100">
+          <th class="w-10 text-center">No</th>
+          <th class="text-left">Nama Dokumen / Berkas</th>
+          <th class="w-24 text-center">Sifat</th>
+          <th class="w-20 text-center">Status</th>
+          <th class="w-44 text-left">Catatan Verifikator</th>
+        </tr>
+      </thead>
+      <tbody id="print-checklist-tbody">
+        <!-- Diisi otomatis via JS -->
+      </tbody>
+    </table>
+
+    <!-- Kolom Tanda Tangan -->
+    <div class="grid grid-cols-2 gap-8 text-xs text-center mt-8">
+      <div>
+        <p class="mb-14">Diserahkan Oleh,<br><strong>Penyedia / Pelaksana Pekerjaan</strong></p>
+        <p class="font-bold underline" id="print-ttd-penyedia">( ........................................ )</p>
+      </div>
+      <div>
+        <p class="mb-14">Diverifikasi Oleh,<br><strong>PPTK / Verifikator Keuangan</strong></p>
+        <p class="font-bold underline">( ........................................ )</p>
+      </div>
+    </div>
+  </div>
+
+  </div> <!-- END #app-wrapper -->
+
+  <!-- ==================================================================== -->
+  <!-- JAVASCRIPT LOGIC                                                     -->
+  <!-- ==================================================================== -->
+  <script>
+    // Kredensial Autentikasi
+    const AUTH_USER = 'ifdal';
+    const AUTH_PASS = '140392';
+    const AUTH_SESSION_KEY = 'sim_bap_ls_auth_session';
+
+    function checkAuthSession() {
+      const isLoggedIn = sessionStorage.getItem(AUTH_SESSION_KEY) === 'true';
+      const loginScreen = document.getElementById('login-screen');
+      const appWrapper = document.getElementById('app-wrapper');
+
+      if (isLoggedIn) {
+        loginScreen.classList.add('hidden');
+        appWrapper.classList.remove('hidden');
+      } else {
+        loginScreen.classList.remove('hidden');
+        appWrapper.classList.add('hidden');
+      }
+    }
+
+    function handleLogin(event) {
+      event.preventDefault();
+      const usernameInput = document.getElementById('login-username').value.trim();
+      const passwordInput = document.getElementById('login-password').value;
+      const errorBox = document.getElementById('login-error');
+
+      if (usernameInput === AUTH_USER && passwordInput === AUTH_PASS) {
+        errorBox.classList.add('hidden');
+        sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
+        checkAuthSession();
+        lucide.createIcons();
+        showToast('Selamat datang kembali, ifdal!');
+      } else {
+        errorBox.classList.remove('hidden');
+        document.getElementById('login-password').value = '';
+        document.getElementById('login-password').focus();
+      }
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      document.getElementById('login-username').value = '';
+      document.getElementById('login-password').value = '';
+      document.getElementById('login-error').classList.add('hidden');
+      checkAuthSession();
+      lucide.createIcons();
+    }
+
+    function togglePasswordVisibility() {
+      const passInput = document.getElementById('login-password');
+      const eyeIcon = document.getElementById('eye-icon');
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        eyeIcon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        passInput.type = 'password';
+        eyeIcon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    }
+
+    // Data Master Susunan Dokumen Pencairan sesuai Excel
+    const DOCS_DATA = {
+      '95': [
+        { id: '95_1', no: 1, title: 'Surat Perintah Pemotongan dan Penyetoran Pajak', optional: false },
+        { id: '95_2', no: 2, title: 'Billing Deposit PPN dan PPh', optional: false },
+        { id: '95_3', no: 3, title: 'SPM-SPTJM-SPP by SIPD', optional: false },
+        { id: '95_4', no: 4, title: 'SPM by SIKUAT', optional: false },
+        { id: '95_5', no: 5, title: 'Surat Pernyataan PPTK-PPK', optional: false },
+        { id: '95_6', no: 6, title: 'Data Kelengkapan Pengajuan SP2D-LS', optional: true },
+        { id: '95_7', no: 7, title: 'Ringkasan Surat Perintah Kerja', optional: true },
+        { id: '95_8', no: 8, title: 'Tanda Penerimaan / Kwitansi', optional: false },
+        { id: '95_9', no: 9, title: 'Berita Acara Pembayaran', optional: false },
+        { id: '95_10', no: 10, title: 'Rekomendasi', optional: false },
+        { id: '95_11', no: 11, title: 'Persetujuan Pembayaran oleh PA/KPA/PPK', optional: false },
+        { id: '95_12', no: 12, title: 'Permohonan Pembayaran dari Penyedia', optional: false },
+        { id: '95_13', no: 13, title: 'Berita Acara Serah Terima Pekerjaan', optional: false },
+        { id: '95_14', no: 14, title: 'Berita Acara Pemeriksaan Pekerjaan', optional: false },
+        { id: '95_15', no: 15, title: 'Perintah Penilaian/Penyerahan Hasil Pekerjaan oleh KPA/PPK', optional: false },
+        { id: '95_16', no: 16, title: 'Permohonan Pemeriksaan/Serah Terima Pekerjaan dari Penyedia', optional: false },
+        { id: '95_17', no: 17, title: 'Dokumentasi', optional: false },
+        { id: '95_18', no: 18, title: 'SPK [Cover-SPK-SPMK-Syarat Umum-SPBJ]', optional: false },
+        { id: '95_19', no: 19, title: 'Bukti Setoran Pembayaran BPJS Tenaga Kerja', optional: false },
+        { id: '95_20', no: 20, title: 'Bukti Setoran Pembayaran Pajak Galian C', optional: false },
+        { id: '95_21', no: 21, title: 'SPD', optional: false },
+        { id: '95_22', no: 22, title: 'DPA', optional: false },
+        { id: '95_23', no: 23, title: 'NPWP', optional: true },
+        { id: '95_24', no: 24, title: 'No Rekening Giro', optional: false }
+      ],
+      '5': [
+        { id: '5_1', no: 1, title: 'Surat Perintah Pemotongan dan Penyetoran Pajak', optional: false },
+        { id: '5_2', no: 2, title: 'Billing Deposit PPN dan PPh', optional: false },
+        { id: '5_3', no: 3, title: 'SPM-SPTJM-SPP by SIPD', optional: false },
+        { id: '5_4', no: 4, title: 'SPM by SIKUAT', optional: false },
+        { id: '5_5', no: 5, title: 'Surat Pernyataan PPTK-PPK', optional: false },
+        { id: '5_6', no: 6, title: 'Data Kelengkapan Pengajuan SP2D-LS', optional: true },
+        { id: '5_7', no: 7, title: 'Ringkasan Surat Perintah Kerja', optional: true },
+        { id: '5_8', no: 8, title: 'Tanda Penerimaan / Kwitansi', optional: false },
+        { id: '5_9', no: 9, title: 'Berita Acara Pembayaran', optional: false },
+        { id: '5_10', no: 10, title: 'Rekomendasi', optional: false },
+        { id: '5_11', no: 11, title: 'Persetujuan Pembayaran oleh PA/KPA/PPK', optional: false },
+        { id: '5_12', no: 12, title: 'Permohonan Pembayaran dari Penyedia', optional: false },
+        { id: '5_13', no: 13, title: 'Jaminan Pemeliharaan dari Asuransi', optional: false }
+      ]
+    };
+
+    const STORAGE_KEY = 'sim_bap_ls_state_v1';
+
+    // State Aplikasi
+    let appState = {
+      paket: '',
+      penyedia: '',
+      noKontrak: '',
+      nilaiKontrak: 150000000,
+      kategori: 'konstruksi_kecil',
+      tarifPpn: 11,
+      tarifPph: 1.75,
+      terminMode: '95',
+      persenBap: 95,
+      persenLalu: 0,
+      activeDocTab: '95',
+      docFilter: 'all',
+      checkedDocs: {}, // { '95_1': true }
+      docNotes: {}     // { '95_1': 'Sudah diparaf' }
+    };
+
+    // Format Angka ke Rupiah Indonesia
+    function formatRupiah(angka) {
+      const rounded = Math.round(angka || 0);
+      return 'Rp ' + rounded.toLocaleString('id-ID');
+    }
+
+    function formatAngka(angka) {
+      const rounded = Math.round(angka || 0);
+      return rounded.toLocaleString('id-ID');
+    }
+
+    // Format singkatan nominal (misal: 150 Juta)
+    function formatSingkat(nilai) {
+      if (!nilai || nilai <= 0) return 'Rp 0';
+      if (nilai >= 1000000000) {
+        return 'Rp ' + (nilai / 1000000000).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' Miliar';
+      }
+      if (nilai >= 1000000) {
+        return 'Rp ' + (nilai / 1000000).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' Juta';
+      }
+      return formatRupiah(nilai);
+    }
+
+    // Toast Notifikasi
+    let toastTimeout;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    // Simpan ke LocalStorage
+    function saveState() {
+      appState.paket = document.getElementById('input-paket').value;
+      appState.penyedia = document.getElementById('input-penyedia').value;
+      appState.noKontrak = document.getElementById('input-nokontrak').value;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {
+        console.warn('Gagal menyimpan ke localStorage', e);
+      }
+      updatePrintView();
+    }
+
+    // Muat dari LocalStorage
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          appState = { ...appState, ...parsed };
+        }
+      } catch (e) {
+        console.warn('Gagal memuat state', e);
+      }
+
+      // Terapkan ke DOM
+      document.getElementById('input-paket').value = appState.paket || '';
+      document.getElementById('input-penyedia').value = appState.penyedia || '';
+      document.getElementById('input-nokontrak').value = appState.noKontrak || '';
+      document.getElementById('input-nilai-kontrak').value = formatAngka(appState.nilaiKontrak);
+      document.getElementById('select-kategori').value = appState.kategori;
+      document.getElementById('input-tarif-ppn').value = appState.tarifPpn;
+      document.getElementById('input-tarif-pph').value = appState.tarifPph;
+      document.getElementById('input-persen-bap').value = appState.persenBap;
+      document.getElementById('input-persen-lalu').value = appState.persenLalu;
+
+      updateTerminButtonsUI(appState.terminMode);
+      calculateBAP();
+      switchDocTab(appState.activeDocTab, false);
+    }
+
+    // Handle Input Nilai Kontrak dengan pemisah ribuan otomatis
+    function handleContractInput(el) {
+      const raw = el.value.replace(/\D/g, '');
+      const num = parseInt(raw, 10) || 0;
+      appState.nilaiKontrak = num;
+      el.value = num > 0 ? formatAngka(num) : '';
+      calculateBAP();
+    }
+
+    function setContractValue(val) {
+      appState.nilaiKontrak = val;
+      document.getElementById('input-nilai-kontrak').value = formatAngka(val);
+      calculateBAP();
+    }
+
+    // Handle Perubahan Kategori Pekerjaan
+    function handleCategoryChange() {
+      const select = document.getElementById('select-kategori');
+      const opt = select.options[select.selectedIndex];
+      appState.kategori = select.value;
+
+      if (select.value !== 'custom') {
+        const ppn = parseFloat(opt.getAttribute('data-ppn')) || 11;
+        const pph = parseFloat(opt.getAttribute('data-pph')) || 1.75;
+        document.getElementById('input-tarif-ppn').value = ppn;
+        document.getElementById('input-tarif-pph').value = pph;
+      }
+      calculateBAP();
+    }
+
+    function setPpnRate(rate) {
+      document.getElementById('input-tarif-ppn').value = rate;
+      calculateBAP();
+    }
+
+    // Pilih Skema Termin Pembayaran
+    function selectTermin(mode) {
+      appState.terminMode = mode;
+      const infoEl = document.getElementById('info-skema-bap');
+
+      if (mode === '100') {
+        document.getElementById('input-persen-bap').value = 100;
+        document.getElementById('input-persen-lalu').value = 0;
+        infoEl.textContent = '* Pembayaran Sekaligus 100% (Pekerjaan selesai 100% tanpa retensi atau dengan jaminan pemeliharaan).';
+      } else if (mode === '30') {
+        document.getElementById('input-persen-bap').value = 30;
+        document.getElementById('input-persen-lalu').value = 0;
+        infoEl.textContent = '* Pembayaran Uang Muka 30% dari Nilai Kontrak.';
+      } else if (mode === '50') {
+        document.getElementById('input-persen-bap').value = 50;
+        document.getElementById('input-persen-lalu').value = 0;
+        infoEl.textContent = '* Pembayaran Termin 50% dari Nilai Kontrak.';
+      } else if (mode === '70') {
+        document.getElementById('input-persen-bap').value = 70;
+        document.getElementById('input-persen-lalu').value = 0;
+        infoEl.textContent = '* Pembayaran Termin 70% dari Nilai Kontrak.';
+      } else if (mode === '95') {
+        document.getElementById('input-persen-bap').value = 95;
+        document.getElementById('input-persen-lalu').value = 0;
+        infoEl.textContent = '* Pembayaran Prestasi Fisik 95% (Retensi pemeliharaan 5% ditahan).';
+        // Sinkronisasi otomatis ke tab dokumen 95%
+        switchDocTab('95', false);
+      } else if (mode === '5') {
+        document.getElementById('input-persen-bap').value = 5;
+        document.getElementById('input-persen-lalu').value = 95;
+        infoEl.textContent = '* Pembayaran Retensi Pemeliharaan 5% (Setelah masa pemeliharaan selesai / Jaminan Pemeliharaan).';
+        // Sinkronisasi otomatis ke tab dokumen 5%
+        switchDocTab('5', false);
+      }
+
+      updateTerminButtonsUI(mode);
+      calculateBAP();
+    }
+
+    function updateTerminButtonsUI(activeMode) {
+      ['100', '95', '5', '30', '50', '70'].forEach(m => {
+        const btn = document.getElementById(`btn-termin-${m}`);
+        if (!btn) return;
+        if (m === activeMode) {
+          btn.className = 'termin-btn py-2 px-2 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-900 text-xs font-bold transition text-center cursor-pointer shadow-2xs';
+        } else {
+          btn.className = 'termin-btn py-2 px-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition text-center cursor-pointer';
+        }
+      });
+    }
+
+    // Rumus Inti Perhitungan BAP LS (Sesuai Excel)
+    function hitungKomponenPajak(nilaiKontrak, persen, tarifPpn, tarifPph) {
+      const bruto = nilaiKontrak * (persen / 100);
+      // Rumus Excel: DPP = Bruto * 100 / (100 + tarifPpn) -> untuk PPN 11% = Bruto * 100 / 111
+      const pembagiDpp = 100 + tarifPpn;
+      const dpp = pembagiDpp > 0 ? (bruto * 100) / pembagiDpp : bruto;
+      const ppn = dpp * (tarifPpn / 100);
+      const pph = dpp * (tarifPph / 100);
+      const totalPajak = ppn + pph;
+      const netto = bruto - ppn;
+      const bersih = bruto - totalPajak;
+
+      return { bruto, dpp, ppn, pph, totalPajak, netto, bersih };
+    }
+
+    function calculateBAP() {
+      const kontrak = appState.nilaiKontrak || 0;
+      const tarifPpn = parseFloat(document.getElementById('input-tarif-ppn').value) || 0;
+      const tarifPph = parseFloat(document.getElementById('input-tarif-pph').value) || 0;
+      const persenBap = parseFloat(document.getElementById('input-persen-bap').value) || 0;
+      const persenLalu = parseFloat(document.getElementById('input-persen-lalu').value) || 0;
+
+      appState.tarifPpn = tarifPpn;
+      appState.tarifPph = tarifPph;
+      appState.persenBap = persenBap;
+      appState.persenLalu = persenLalu;
+
+      document.getElementById('terbilang-singkat').textContent = formatSingkat(kontrak);
+
+      const hasil = hitungKomponenPajak(kontrak, persenBap, tarifPpn, tarifPph);
+
+      // Update UI Rincian BAP Ini
+      document.getElementById('badge-persen-aktif').textContent = `${persenBap}%`;
+      document.getElementById('formula-bruto').textContent = `Kontrak × ${persenBap}%`;
+      document.getElementById('formula-dpp').textContent = `Bruto × 100 / ${100 + tarifPpn}`;
+      document.getElementById('lbl-ppn-rate').textContent = tarifPpn.toString().replace('.', ',');
+      document.getElementById('lbl-pph-rate').textContent = tarifPph.toString().replace('.', ',');
+      document.getElementById('formula-ppn').textContent = `DPP × ${tarifPpn}%`;
+      document.getElementById('formula-pph').textContent = `DPP × ${tarifPph}%`;
+
+      document.getElementById('res-bruto').textContent = formatRupiah(hasil.bruto);
+      document.getElementById('res-dpp').textContent = formatRupiah(hasil.dpp);
+      document.getElementById('res-ppn').textContent = formatRupiah(hasil.ppn);
+      document.getElementById('res-pph').textContent = formatRupiah(hasil.pph);
+      document.getElementById('res-total-pajak').textContent = formatRupiah(hasil.totalPajak);
+      document.getElementById('res-netto').textContent = formatRupiah(hasil.netto);
+      document.getElementById('res-bersih').textContent = formatRupiah(hasil.bersih);
+
+      // Rekapitulasi Kontrak
+      const bayarLalu = kontrak * (persenLalu / 100);
+      const bayarSdIni = bayarLalu + hasil.bruto;
+      const sisaKontrak = Math.max(0, kontrak - bayarSdIni);
+
+      document.getElementById('rek-kontrak').textContent = formatRupiah(kontrak);
+      document.getElementById('rek-lalu').textContent = formatRupiah(bayarLalu);
+      document.getElementById('rek-bap-ini').textContent = formatRupiah(hasil.bruto);
+      document.getElementById('rek-sd-ini').textContent = formatRupiah(bayarSdIni);
+      document.getElementById('rek-sisa').textContent = formatRupiah(sisaKontrak);
+
+      // Update Tabel Simulasi Tahapan (95% & 5% & Total 100%)
+      const sim95 = hitungKomponenPajak(kontrak, 95, tarifPpn, tarifPph);
+      const sim5 = hitungKomponenPajak(kontrak, 5, tarifPpn, tarifPph);
+      const sim100 = hitungKomponenPajak(kontrak, 100, tarifPpn, tarifPph);
+
+      const tbodySim = document.getElementById('tbody-simulasi');
+      tbodySim.innerHTML = `
+        <tr class="hover:bg-slate-50">
+          <td class="px-3.5 py-2.5 font-sans font-semibold text-slate-700">Fisik 95%</td>
+          <td class="px-3.5 py-2.5 text-right text-slate-800">${formatAngka(sim95.bruto)}</td>
+          <td class="px-3.5 py-2.5 text-right text-amber-700">${formatAngka(sim95.ppn)}</td>
+          <td class="px-3.5 py-2.5 text-right text-amber-700">${formatAngka(sim95.pph)}</td>
+          <td class="px-3.5 py-2.5 text-right font-bold text-emerald-700">${formatAngka(sim95.bersih)}</td>
+        </tr>
+        <tr class="hover:bg-slate-50">
+          <td class="px-3.5 py-2.5 font-sans font-semibold text-slate-700">Retensi 5%</td>
+          <td class="px-3.5 py-2.5 text-right text-slate-800">${formatAngka(sim5.bruto)}</td>
+          <td class="px-3.5 py-2.5 text-right text-amber-700">${formatAngka(sim5.ppn)}</td>
+          <td class="px-3.5 py-2.5 text-right text-amber-700">${formatAngka(sim5.pph)}</td>
+          <td class="px-3.5 py-2.5 text-right font-bold text-emerald-700">${formatAngka(sim5.bersih)}</td>
+        </tr>
+        <tr class="bg-slate-100 font-bold border-t border-slate-300">
+          <td class="px-3.5 py-2.5 font-sans text-slate-900">Total 100%</td>
+          <td class="px-3.5 py-2.5 text-right text-slate-900">${formatAngka(sim100.bruto)}</td>
+          <td class="px-3.5 py-2.5 text-right text-amber-800">${formatAngka(sim100.ppn)}</td>
+          <td class="px-3.5 py-2.5 text-right text-amber-800">${formatAngka(sim100.pph)}</td>
+          <td class="px-3.5 py-2.5 text-right text-emerald-800">${formatAngka(sim100.bersih)}</td>
+        </tr>
+      `;
+
+      saveState();
+    }
+
+    // =====================================================================
+    // LOGIKA CHECKLIST DOKUMEN PENCAIRAN
+    // =====================================================================
+
+    function switchDocTab(tabKey, shouldSave = true) {
+      appState.activeDocTab = tabKey;
+
+      const btn95 = document.getElementById('tab-doc-95');
+      const btn5 = document.getElementById('tab-doc-5');
+
+      if (tabKey === '95') {
+        btn95.className = 'py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer bg-white text-slate-900 shadow-xs';
+        btn5.className = 'py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer text-slate-600 hover:text-slate-900';
+      } else {
+        btn5.className = 'py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer bg-white text-slate-900 shadow-xs';
+        btn95.className = 'py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer text-slate-600 hover:text-slate-900';
+      }
+
+      renderChecklist();
+      if (shouldSave) saveState();
+    }
+
+    function setDocFilter(filter) {
+      appState.docFilter = filter;
+      ['all', 'unchecked', 'checked'].forEach(f => {
+        const el = document.getElementById(`filter-${f}`);
+        if (f === filter) {
+          el.className = 'filter-btn px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-900 shadow-2xs cursor-pointer';
+        } else {
+          el.className = 'filter-btn px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 cursor-pointer';
+        }
+      });
+      renderChecklist();
+    }
+
+    function toggleDocCheck(docId) {
+      appState.checkedDocs[docId] = !appState.checkedDocs[docId];
+      renderChecklist();
+      saveState();
+    }
+
+    function updateDocNote(docId, value) {
+      appState.docNotes[docId] = value;
+      saveState();
+    }
+
+    function toggleCheckAllCurrentTab() {
+      const list = DOCS_DATA[appState.activeDocTab];
+      const allChecked = list.every(item => appState.checkedDocs[item.id]);
+      list.forEach(item => {
+        appState.checkedDocs[item.id] = !allChecked;
+      });
+      renderChecklist();
+      saveState();
+      showToast(!allChecked ? 'Semua dokumen ditandai lengkap' : 'Semua centang dibatalkan');
+    }
+
+    function updateDocCountersAndProgress() {
+      // Hitung badge untuk 95% dan 5%
+      ['95', '5'].forEach(tab => {
+        const list = DOCS_DATA[tab];
+        const checkedCount = list.filter(d => appState.checkedDocs[d.id]).length;
+        const badge = document.getElementById(`count-badge-${tab}`);
+        badge.textContent = `${checkedCount}/${list.length}`;
+        if (checkedCount === list.length) {
+          badge.className = 'px-2 py-0.5 text-xs rounded-full bg-emerald-600 text-white font-mono';
+        } else {
+          badge.className = 'px-2 py-0.5 text-xs rounded-full bg-slate-200 text-slate-700 font-mono';
+        }
+      });
+
+      // Progress bar tab aktif
+      const currentList = DOCS_DATA[appState.activeDocTab];
+      const wajibDocs = currentList.filter(d => !d.optional);
+      const optionalDocs = currentList.filter(d => d.optional);
+
+      const checkedWajib = wajibDocs.filter(d => appState.checkedDocs[d.id]).length;
+      const checkedOpt = optionalDocs.filter(d => appState.checkedDocs[d.id]).length;
+      const totalChecked = checkedWajib + checkedOpt;
+
+      // Update mobile badge
+      document.getElementById('mobile-badge-count').textContent = `${totalChecked}/${currentList.length}`;
+
+      // Persentase berdasarkan dokumen wajib agar akurat secara verifikasi
+      const pctWajib = wajibDocs.length > 0 ? Math.round((checkedWajib / wajibDocs.length) * 100) : 100;
+
+      document.getElementById('progress-percent-text').textContent = `${pctWajib}%`;
+      document.getElementById('progress-bar-fill').style.width = `${pctWajib}%`;
+      document.getElementById('progress-detail-text').textContent =
+        `${checkedWajib} dari ${wajibDocs.length} dokumen wajib lengkap (+ ${checkedOpt}/${optionalDocs.length} opsional)`;
+
+      const statusWajibEl = document.getElementById('status-wajib-badge');
+      if (checkedWajib === wajibDocs.length) {
+        statusWajibEl.className = 'inline-flex items-center gap-1.5 font-bold text-emerald-700';
+        statusWajibEl.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i> Seluruh Dokumen Wajib Lengkap!`;
+      } else {
+        const kurang = wajibDocs.length - checkedWajib;
+        statusWajibEl.className = 'inline-flex items-center gap-1.5 font-semibold text-amber-700';
+        statusWajibEl.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4"></i> Kurang ${kurang} dokumen wajib`;
+      }
+
+      const allChecked = currentList.every(d => appState.checkedDocs[d.id]);
+      document.getElementById('btn-check-all').textContent = allChecked ? 'Batal Centang Semua' : 'Centang Semua';
+    }
+
+    function renderChecklist() {
+      const container = document.getElementById('checklist-container');
+      const searchQuery = (document.getElementById('doc-search').value || '').toLowerCase();
+      const filter = appState.docFilter;
+      const currentList = DOCS_DATA[appState.activeDocTab];
+
+      updateDocCountersAndProgress();
+
+      const filtered = currentList.filter(item => {
+        const isChecked = !!appState.checkedDocs[item.id];
+        if (filter === 'checked' && !isChecked) return false;
+        if (filter === 'unchecked' && isChecked) return false;
+        if (searchQuery && !item.title.toLowerCase().includes(searchQuery)) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 px-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+            <p class="text-sm font-medium text-slate-500">Tidak ada dokumen yang sesuai dengan filter.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const isChecked = !!appState.checkedDocs[item.id];
+        const noteVal = appState.docNotes[item.id] || '';
+        const cardStyle = isChecked
+          ? 'bg-emerald-50/50 border-emerald-200'
+          : 'bg-white border-slate-200 hover:border-slate-300';
+
+        return `
+          <div class="p-3 rounded-xl border ${cardStyle} transition-all">
+            <div class="flex items-start gap-3">
+              <!-- Checkbox Custom -->
+              <button type="button" onclick="toggleDocCheck('${item.id}')"
+                      class="mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition cursor-pointer ${
+                        isChecked
+                          ? 'bg-emerald-600 border-emerald-600 text-white'
+                          : 'bg-white border-slate-300 hover:border-emerald-500'
+                      }">
+                ${isChecked ? '<i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>' : ''}
+              </button>
+
+              <!-- Judul & Badge -->
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-1.5 cursor-pointer" onclick="toggleDocCheck('${item.id}')">
+                  <span class="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                    ${String(item.no).padStart(2, '0')}
+                  </span>
+                  <span class="text-xs sm:text-sm font-semibold ${isChecked ? 'text-emerald-950 line-through decoration-emerald-500/50' : 'text-slate-800'}">
+                    ${item.title}
+                  </span>
+                  ${item.optional
+                    ? '<span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-amber-100 text-amber-800 border border-amber-200">Optional</span>'
+                    : '<span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-slate-100 text-slate-600">Wajib</span>'
+                  }
+                </div>
+
+                <!-- Input Catatan Ringkas per Dokumen -->
+                <div class="mt-2">
+                  <input type="text" value="${noteVal.replace(/"/g, '&quot;')}"
+                         placeholder="Tambah catatan (misal: no. surat / paraf)..."
+                         oninput="updateDocNote('${item.id}', this.value)"
+                         class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50/80 border border-slate-200 text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white transition" />
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // =====================================================================
+    // TAMPILAN CETAK & SALIN RINGKASAN
+    // =====================================================================
+
+    function updatePrintView() {
+      const kontrak = appState.nilaiKontrak || 0;
+      const hasil = hitungKomponenPajak(kontrak, appState.persenBap, appState.tarifPpn, appState.tarifPph);
+      const select = document.getElementById('select-kategori');
+      const katLabel = select.options[select.selectedIndex]?.text || appState.kategori;
+
+      const today = new Date().toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      });
+
+      document.getElementById('print-date').textContent = today;
+      document.getElementById('print-tahap-title').textContent =
+        appState.activeDocTab === '95' ? 'Pencairan 95% (Fisik)' : 'Pencairan 5% (Retensi)';
+
+      document.getElementById('print-paket').textContent = appState.paket || '-';
+      document.getElementById('print-penyedia').textContent = appState.penyedia || '-';
+      document.getElementById('print-nokontrak').textContent = appState.noKontrak || '-';
+      document.getElementById('print-kategori').textContent = katLabel;
+      document.getElementById('print-ttd-penyedia').textContent =
+        appState.penyedia ? `( ${appState.penyedia} )` : '( ........................................ )';
+
+      document.getElementById('print-kontrak').textContent = formatRupiah(kontrak);
+      document.getElementById('print-persen').textContent = `${appState.persenBap}%`;
+      document.getElementById('print-bruto').textContent = formatRupiah(hasil.bruto);
+      document.getElementById('print-dpp').textContent = formatRupiah(hasil.dpp);
+      document.getElementById('print-ppn-rate').textContent = `${appState.tarifPpn}%`;
+      document.getElementById('print-ppn').textContent = formatRupiah(hasil.ppn);
+      document.getElementById('print-pph-rate').textContent = `${appState.tarifPph}%`;
+      document.getElementById('print-pph').textContent = formatRupiah(hasil.pph);
+      document.getElementById('print-total-pajak').textContent = formatRupiah(hasil.totalPajak);
+      document.getElementById('print-netto').textContent = formatRupiah(hasil.netto);
+      document.getElementById('print-bersih').textContent = formatRupiah(hasil.bersih);
+
+      // Tabel Print Checklist
+      const list = DOCS_DATA[appState.activeDocTab];
+      const checkedCount = list.filter(d => appState.checkedDocs[d.id]).length;
+      document.getElementById('print-doc-tab-label').textContent =
+        appState.activeDocTab === '95' ? 'Pencairan 95% - 24 Dokumen' : 'Pencairan 5% - 13 Dokumen';
+      document.getElementById('print-doc-summary').textContent = `Lengkap: ${checkedCount} / ${list.length} Berkas`;
+
+      const tbodyPrint = document.getElementById('print-checklist-tbody');
+      tbodyPrint.innerHTML = list.map(item => {
+        const isChecked = !!appState.checkedDocs[item.id];
+        const note = appState.docNotes[item.id] || '';
+        return `
+          <tr>
+            <td class="text-center">${item.no}</td>
+            <td>${item.title}</td>
+            <td class="text-center">${item.optional ? 'Optional' : 'Wajib'}</td>
+            <td class="text-center font-bold">${isChecked ? '✓ ADA' : '☐ BELUM'}</td>
+            <td>${note}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Salin Ringkasan Teks ke Clipboard (menggunakan execCommand sesuai aturan iframe)
+    function copySummaryToClipboard() {
+      const kontrak = appState.nilaiKontrak || 0;
+      const hasil = hitungKomponenPajak(kontrak, appState.persenBap, appState.tarifPpn, appState.tarifPph);
+      const list = DOCS_DATA[appState.activeDocTab];
+      const checkedCount = list.filter(d => appState.checkedDocs[d.id]).length;
+
+      const text = [
+        `RINGKASAN PERHITUNGAN BAP LS & VERIFIKASI BERKAS`,
+        `================================================`,
+        `Paket Pekerjaan : ${appState.paket || '-'}`,
+        `Penyedia        : ${appState.penyedia || '-'}`,
+        `No. Kontrak/SPK : ${appState.noKontrak || '-'}`,
+        ``,
+        `RINCIAN KEUANGAN (Tahap ${appState.persenBap}%):`,
+        `- Nilai Kontrak : ${formatRupiah(kontrak)}`,
+        `- Nilai Bruto   : ${formatRupiah(hasil.bruto)}`,
+        `- DPP           : ${formatRupiah(hasil.dpp)}`,
+        `- PPN (${appState.tarifPpn}%)     : ${formatRupiah(hasil.ppn)}`,
+        `- PPh (${appState.tarifPph}%)   : ${formatRupiah(hasil.pph)}`,
+        `- Jumlah Pajak  : ${formatRupiah(hasil.totalPajak)}`,
+        `- Nilai Netto   : ${formatRupiah(hasil.netto)}`,
+        `- Bersih Terima : ${formatRupiah(hasil.bersih)}`,
+        ``,
+        `KELENGKAPAN BERKAS (${appState.activeDocTab === '95' ? 'Pencairan 95%' : 'Pencairan 5%'}):`,
+        `Status: ${checkedCount} dari ${list.length} dokumen lengkap.`
+      ].join('\n');
+
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Ringkasan BAP & pajak berhasil disalin!');
+      } catch (err) {
+        showToast('Gagal menyalin ringkasan.');
+      }
+      document.body.removeChild(textarea);
+    }
+
+    // Navigasi Tab Mobile
+    function switchMobileView(view) {
+      const panelCalc = document.getElementById('panel-calc');
+      const panelDocs = document.getElementById('panel-docs');
+      const tabCalc = document.getElementById('mobile-tab-calc');
+      const tabDocs = document.getElementById('mobile-tab-docs');
+
+      if (view === 'calc') {
+        panelCalc.classList.remove('hidden');
+        panelDocs.classList.add('hidden', 'lg:block');
+        tabCalc.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-semibold bg-emerald-600 text-white flex items-center justify-center gap-2';
+        tabDocs.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 flex items-center justify-center gap-2';
+      } else {
+        panelCalc.classList.add('hidden', 'lg:block');
+        panelDocs.classList.remove('hidden');
+        tabDocs.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-semibold bg-emerald-600 text-white flex items-center justify-center gap-2';
+        tabCalc.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 flex items-center justify-center gap-2';
+      }
+    }
+
+    // Modal Reset
+    function openResetModal() {
+      const modal = document.getElementById('reset-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeResetModal() {
+      const modal = document.getElementById('reset-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function executeReset() {
+      localStorage.removeItem(STORAGE_KEY);
+      appState = {
+        paket: '',
+        penyedia: '',
+        noKontrak: '',
+        nilaiKontrak: 150000000,
+        kategori: 'konstruksi_kecil',
+        tarifPpn: 11,
+        tarifPph: 1.75,
+        terminMode: '95',
+        persenBap: 95,
+        persenLalu: 0,
+        activeDocTab: '95',
+        docFilter: 'all',
+        checkedDocs: {},
+        docNotes: {}
+      };
+      closeResetModal();
+      loadState();
+      showToast('Seluruh data berhasil direset ke awal');
+    }
+
+    // Inisialisasi saat halaman dimuat
+    window.addEventListener('DOMContentLoaded', () => {
+      checkAuthSession();
+      lucide.createIcons();
+      loadState();
+    });
+  </script>
+</body>
+</html>
